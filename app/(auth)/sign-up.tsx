@@ -10,6 +10,7 @@ import { ReactNativeModal } from "react-native-modal";
 import { router } from "expo-router";
 import { tls } from "node-forge";
 import { Alert } from "react-native";
+import { fetchAPI } from "@/lib/fetch";
 
 const SignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -56,9 +57,23 @@ const SignUp = () => {
       const completeSignUp = await signUp.attemptEmailAddressVerification({
         code: verification.code,
       });
-
+      console.log(
+        JSON.stringify({
+          name: form.name,
+          email: form.email,
+          clerkId: completeSignUp.createdUserId,
+        })
+      );
       if (completeSignUp.status === "complete") {
         //TODO: create a database user
+        await fetchAPI("/(api)/user", {
+          method: "POST",
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            clerkId: completeSignUp.createdUserId,
+          }),
+        });
         await setActive({ session: completeSignUp.createdSessionId });
         setVerification({ ...verification, state: "success" });
       } else {
@@ -172,7 +187,7 @@ const SignUp = () => {
             <CustomButton
               title="Browse Home"
               onPress={() => {
-                setShowSuccessModal;
+                setShowSuccessModal(false);
                 router.push("/(root)/(tabs)/home");
               }}
             />
